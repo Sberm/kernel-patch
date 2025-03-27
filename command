@@ -1,0 +1,14 @@
+git send-email \
+--to acme@kernel.org \
+--cc mingo@redhat.com \
+--cc namhyung@kernel.org \
+--cc mark.rutland@arm.com \
+--cc alexander.shishkin@linux.intel.com \
+--cc jolsa@kernel.org \
+--cc irogers@google.com \
+--cc adrian.hunter@intel.com \
+--cc peterz@infradead.org \
+--cc kan.liang@linux.intel.com \
+--cc linux-perf-users@vger.kernel.org \
+--cc linux-kernel@vger.kernel.org \
+--smtp-debug=1 $1

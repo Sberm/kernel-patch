@@ -1,0 +1,27 @@
+Signed-off-by:
+Acked-by:
+Cc:
+Co-developed-by:
+Reported-by:
+Tested-by:
+Reviewed-by:
+Suggested-by:
+Fixes:
+
+Arnaldo Carvalho de Melo <acme@kernel.org>
+Peter Zijlstra <peterz@infradead.org>
+Ingo Molnar <mingo@redhat.com>
+Arnaldo Carvalho de Melo <acme@kernel.org>
+Namhyung Kim <namhyung@kernel.org>
+Mark Rutland <mark.rutland@arm.com>
+Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Jiri Olsa <jolsa@kernel.org>
+Ian Rogers <irogers@google.com>
+Adrian Hunter <adrian.hunter@intel.com>
+"Liang, Kan" <kan.liang@linux.intel.com>
+
+To: acme@kernel.org
+Cc: namhyung@kernel.org, peterz@infradead.org, mingo@redhat.com,
+      acme@kernel.org,  jolsa@kernel.org, irogers@google.com,
+      adrian.hunter@intel.com, kan.liang@linux.intel.com,
+      linux-perf-users@vger.kernel.org, linux-kernel@vger.kernel.org

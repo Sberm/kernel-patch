@@ -1,0 +1,26 @@
+[]
+perf trace: Allocate arg_fmt only for traced syscalls
+
+perf $ sudo ./perf trace -e futex -p 544404 --max-events=1
+building arg_fmt for syscall futex
+extra number
+building arg_fmt for syscall accept
+extra number
+building arg_fmt for syscall accept4
+extra number
+building arg_fmt for syscall access
+extra number
+building arg_fmt for syscall acct
+extra number
+building arg_fmt for syscall add_key
+extra number
+building arg_fmt for syscall adjtimex
+
+[]
+Also, use in enum's test: 
+if [ ! -f /sys/kernel/btf/vmlinux ]
+
+[]
+Should there be some type of string mismatch printing the actual output and the
+desired output/format? 
+check_string(string, format)

@@ -1,0 +1,31 @@
+From 8e2a73da75046904aee8e74e9d09244f2855fe5a Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Wed, 26 Mar 2025 09:27:07 -0700
+Subject: [PATCH] perf trace: Change __augmented_syscalls__'s value to int
+
+This is to match the type of file descriptors, as suggested by Ian
+Rogers in this discussion:
+https://lore.kernel.org/linux-perf-users/CAP-5=fU+9EQKT2fOuBQ5ds6s4Bh6rWrvco1ow6B-CQ92XuO1kQ@mail.gmail.com/
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+Suggested-by: Ian Rogers <irogers@google.com>
+---
+ tools/perf/util/bpf_skel/augmented_raw_syscalls.bpf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/perf/util/bpf_skel/augmented_raw_syscalls.bpf.c b/tools/perf/util/bpf_skel/augmented_raw_syscalls.bpf.c
+index e4352881e3fa..18a3086489ea 100644
+--- a/tools/perf/util/bpf_skel/augmented_raw_syscalls.bpf.c
++++ b/tools/perf/util/bpf_skel/augmented_raw_syscalls.bpf.c
+@@ -31,7 +31,7 @@
+ struct __augmented_syscalls__ {
+ 	__uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+ 	__type(key, int);
+-	__type(value, __u32);
++	__type(value, int);
+ 	__uint(max_entries, MAX_CPUS);
+ } __augmented_syscalls__ SEC(".maps");
+ 
+-- 
+2.45.2
+

@@ -1,0 +1,38 @@
+From 49053778a03054c27569ef50a647c5ee5050c648 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Fri, 10 Jan 2025 16:54:08 -0800
+Subject: [PATCH v1] perf doc: Improve perf trace's doc on --force-btf option
+
+As mentioned by Arnaldo in a past discussion (Link:
+https://lore.kernel.org/linux-perf-users/Z2m0pWiQgZNXhvxK@x1/), the
+current documentation on --force-btf is vague and inaccurate, this patch
+aims to provide a clearer explanation of the option.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+Suggested-by: Arnaldo Carvalho de Melo <acme@kernel.org>
+---
+ tools/perf/Documentation/perf-trace.txt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tools/perf/Documentation/perf-trace.txt b/tools/perf/Documentation/perf-trace.txt
+index 887dc37773d0..cf2445d2ba3d 100644
+--- a/tools/perf/Documentation/perf-trace.txt
++++ b/tools/perf/Documentation/perf-trace.txt
+@@ -246,10 +246,10 @@ the thread executes on the designated CPUs. Default is to monitor all CPUs.
+ 	arguments to strings (pid to comm, syscall id to syscall name, etc).
+ 
+ --force-btf::
+-	Use btf_dump to pretty print syscall argument data, instead of using hand-crafted pretty
+-	printers. This option is intended for testing BTF integration in perf trace. btf_dump-based
+-	pretty-printing serves as a fallback to hand-crafted pretty printers, as the latter can
+-	better pretty-print integer flags and struct pointers.
++	Use libbpf's btf_dump to pretty print syscall arguments, utilizing only the debug
++	information from BTF. This option is intended for testing BTF integration in perf
++	trace. Using libbpf is a fallback to perf trace's own prettifiers generated from the
++	kernel source, as the latter can better pretty-print integer flags and struct members.
+ 
+ PAGEFAULTS
+ ----------
+-- 
+2.45.2
+

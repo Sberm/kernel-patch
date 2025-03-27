@@ -1,0 +1,50 @@
+perf $ git log --oneline
+35d13f841a3d (HEAD, origin/perf-tools-next, perf-tools-next) perf bpf-filter: Fix a parsing error with comma
+
+perf $ sudo ./perf test "perf trace"
+105: perf trace enum augmentation tests                              : Ok
+106: perf trace BTF general tests                                    : FAILED!
+107: perf trace exit race                                            : Ok
+108: perf trace record and replay                                    : Ok
+133: Check open filename arg using perf trace + vfs_getname          : Skip
+
+perf $ sudo ./perf test "perf trace"
+105: perf trace enum augmentation tests                              : Ok
+106: perf trace BTF general tests                                    : Ok
+107: perf trace exit race                                            : Ok
+108: perf trace record and replay                                    : FAILED!
+133: Check open filename arg using perf trace + vfs_getname          : Skip
+
+[OK]
+!
+tests run individually: Always success.
+tests run separately: Almost always have failures
+  trace BTF individually: success
+  enum individually: success
+  trace record: success
+
+Also, use in enum's test: 
+if [ ! -f /sys/kernel/btf/vmlinux ]
+
+Should there be some type of string mismatch printing the actual output and the
+desired output/format? 
+check_string(string, format)
+
+
+
+
+perf trace: Fix possible insufficient allocation of argument formats
+
+In my previous fix of runtime error(Link:
+https://lore.kernel.org/linux-perf-users/20250122025519.361873-1-howardchu95@gmail.com/),
+I made a mistake of decrementing one unconditionally, regardless of
+whether an extra 'syscall_nr' or 'nr' field was present in
+libtraceevent's tp_format. This may cause perf trace to allocate one
+fewer arg_fmt entry than needed for the accurate representation of syscall
+arguments.
+
+This patch corrects the mistake by checking the presence of'syscall_nr' or
+'nr', and adjusting the length of arg_fmt[] accordingly.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+Suggested-by: Namhyung Kim <namhyung@kernel.org>

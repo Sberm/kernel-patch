@@ -1,0 +1,78 @@
+From 46f51f782b777c7e418fcdd5ae2a63280c3a6938 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Wed, 26 Mar 2025 13:03:21 -0700
+Subject: [PATCH v2] perf trace: Fix possible insufficient allocation of
+ argument formats
+
+Changes in v2:
+* Simplify the code (written by Namhyung)
+
+In my previous fix of runtime error(Link:
+https://lore.kernel.org/linux-perf-users/20250122025519.361873-1-howardchu95@gmail.com/),
+I made a mistake of decrementing one unconditionally, regardless of
+whether an extra 'syscall_nr' or 'nr' field was present in
+libtraceevent's tp_format. This may cause perf trace to allocate one
+fewer arg_fmt entry than needed for the accurate representation of syscall
+arguments.
+
+This patch corrects the mistake by checking the presence of'syscall_nr' or
+'nr', and adjusting the length of arg_fmt[] accordingly.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+Suggested-by: Namhyung Kim <namhyung@kernel.org>
+---
+ tools/perf/builtin-trace.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
+
+diff --git a/tools/perf/builtin-trace.c b/tools/perf/builtin-trace.c
+index a102748bd0c9..439e152186da 100644
+--- a/tools/perf/builtin-trace.c
++++ b/tools/perf/builtin-trace.c
+@@ -2022,9 +2022,6 @@ static int syscall__alloc_arg_fmts(struct syscall *sc, int nr_args)
+ {
+ 	int idx;
+ 
+-	if (nr_args == RAW_SYSCALL_ARGS_NUM && sc->fmt && sc->fmt->nr_args != 0)
+-		nr_args = sc->fmt->nr_args;
+-
+ 	sc->arg_fmt = calloc(nr_args, sizeof(*sc->arg_fmt));
+ 	if (sc->arg_fmt == NULL)
+ 		return -1;
+@@ -2034,7 +2031,6 @@ static int syscall__alloc_arg_fmts(struct syscall *sc, int nr_args)
+ 			sc->arg_fmt[idx] = sc->fmt->arg[idx];
+ 	}
+ 
+-	sc->nr_args = nr_args;
+ 	return 0;
+ }
+ 
+@@ -2176,14 +2172,9 @@ static int syscall__read_info(struct syscall *sc, struct trace *trace)
+ 		return err;
+ 	}
+ 
+-	/*
+-	 * The tracepoint format contains __syscall_nr field, so it's one more
+-	 * than the actual number of syscall arguments.
+-	 */
+-	if (syscall__alloc_arg_fmts(sc, sc->tp_format->format.nr_fields - 1))
+-		return -ENOMEM;
+-
+ 	sc->args = sc->tp_format->format.fields;
++	sc->nr_args = sc->tp_format->format.nr_fields;
++
+ 	/*
+ 	 * We need to check and discard the first variable '__syscall_nr'
+ 	 * or 'nr' that mean the syscall number. It is needless here.
+@@ -2194,6 +2185,9 @@ static int syscall__read_info(struct syscall *sc, struct trace *trace)
+ 		--sc->nr_args;
+ 	}
+ 
++	if (syscall__alloc_arg_fmts(sc, sc->nr_args))
++		return -ENOMEM;
++
+ 	sc->is_exit = !strcmp(name, "exit_group") || !strcmp(name, "exit");
+ 	sc->is_open = !strcmp(name, "open") || !strcmp(name, "openat");
+ 
+-- 
+2.45.2
+

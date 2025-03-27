@@ -1,0 +1,62 @@
+From 83c25ea972b9ddafd96de29fe90c60a8fabde742 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Mon, 24 Mar 2025 16:02:49 -0700
+Subject: [PATCH v1] perf trace: Fix possible insufficient allocation of argument formats
+
+In my previous fix of runtime error(Link:
+https://lore.kernel.org/linux-perf-users/20250122025519.361873-1-howardchu95@gmail.com/),
+I made a mistake of decrementing one unconditionally, regardless of
+whether an extra 'syscall_nr' or 'nr' field was present in
+libtraceevent's tp_format. This may cause perf trace to allocate one
+fewer arg_fmt entry than needed for the accurate representation of syscall
+arguments.
+
+This patch corrects the mistake by checking the presence of'syscall_nr' or
+'nr', and adjusting the length of arg_fmt[] accordingly.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+---
+ tools/perf/builtin-trace.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/tools/perf/builtin-trace.c b/tools/perf/builtin-trace.c
+index a102748bd0c9..ad6dad8e2453 100644
+--- a/tools/perf/builtin-trace.c
++++ b/tools/perf/builtin-trace.c
+@@ -2139,6 +2139,7 @@ static int syscall__read_info(struct syscall *sc, struct trace *trace)
+ 	char tp_name[128];
+ 	const char *name;
+ 	int err;
++	bool extra_nr = false;
+ 
+ 	if (sc->nonexistent)
+ 		return -EEXIST;
+@@ -2176,20 +2177,22 @@ static int syscall__read_info(struct syscall *sc, struct trace *trace)
+ 		return err;
+ 	}
+ 
++	sc->args = sc->tp_format->format.fields;
++	if (!strcmp(sc->args->name, "__syscall_nr") || !strcmp(sc->args->name, "nr"))
++		extra_nr = true;
+ 	/*
+ 	 * The tracepoint format contains __syscall_nr field, so it's one more
+ 	 * than the actual number of syscall arguments.
+ 	 */
+-	if (syscall__alloc_arg_fmts(sc, sc->tp_format->format.nr_fields - 1))
++	if (syscall__alloc_arg_fmts(sc, sc->tp_format->format.nr_fields - (extra_nr ? 1 : 0)))
+ 		return -ENOMEM;
+ 
+-	sc->args = sc->tp_format->format.fields;
+ 	/*
+ 	 * We need to check and discard the first variable '__syscall_nr'
+ 	 * or 'nr' that mean the syscall number. It is needless here.
+ 	 * So drop '__syscall_nr' or 'nr' field but does not exist on older kernels.
+ 	 */
+-	if (sc->args && (!strcmp(sc->args->name, "__syscall_nr") || !strcmp(sc->args->name, "nr"))) {
++	if (sc->args && extra_nr) {
+ 		sc->args = sc->args->next;
+ 		--sc->nr_args;
+ 	}
+-- 
+2.45.2
+
