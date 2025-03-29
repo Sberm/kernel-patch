@@ -1,11 +1,8 @@
 From 46f51f782b777c7e418fcdd5ae2a63280c3a6938 Mon Sep 17 00:00:00 2001
 From: Howard Chu <howardchu95@gmail.com>
 Date: Wed, 26 Mar 2025 13:03:21 -0700
-Subject: [PATCH v2] perf trace: Fix possible insufficient allocation of
+Subject: [PATCH v4] perf trace: Fix possible insufficient allocation of
  argument formats
-
-Changes in v2:
-* Simplify the code (written by Namhyung)
 
 In my previous fix of runtime error(Link:
 https://lore.kernel.org/linux-perf-users/20250122025519.361873-1-howardchu95@gmail.com/),
@@ -20,7 +17,17 @@ This patch corrects the mistake by checking the presence of'syscall_nr' or
 
 Signed-off-by: Howard Chu <howardchu95@gmail.com>
 Suggested-by: Namhyung Kim <namhyung@kernel.org>
----
+Fixes: c7b87ce0dd10 ("perf trace: Fix runtime error of index out of bounds")
+
+Changes in v4:
+- Make the patch apply
+
+Changes in v3:
+- Add 'Fixes:' tag
+
+Changes in v2:
+- Simplify the code (written by Namhyung)
+
  tools/perf/builtin-trace.c | 16 +++++-----------
  1 file changed, 5 insertions(+), 11 deletions(-)
 

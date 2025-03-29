@@ -1,0 +1,17 @@
++--bpf-summary::
++	Collect system call statistics in BPF.  This is only for live mode and
++	works well with -s/--summary option where no argument information is
++	required.
+
+it works with -S as well, doesn't it?
+
+ v4)
+ * fix segfault on -S  (Howard)
+ * correct some comments  (Howard)
+
++	if (!hashmap__find(hash, map_key->nr, &data)) {
+
+I think you should mention the map_key->nr thing, as this change is actually
+important.
+
+

@@ -8,6 +8,7 @@ Reviewed-by:
 Suggested-by:
 Fixes:
 
+Howard Chu <howardchu95@gmail.com>
 Arnaldo Carvalho de Melo <acme@kernel.org>
 Peter Zijlstra <peterz@infradead.org>
 Ingo Molnar <mingo@redhat.com>
