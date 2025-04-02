@@ -1,3 +1,13 @@
+Reviewed-by: Howard Chu <howardchu95@gmail.com>
+Tested-by: Howard Chu <howardchu95@gmail.com>
+Acked-by: Howard Chu <howardchu95@gmail.com>
+Reported-by: Howard Chu <howardchu95@gmail.com>
+Suggested-by: Howard Chu <howardchu95@gmail.com>
+Cc: Howard Chu <howardchu95@gmail.com>
+Co-developed-by: Howard Chu <howardchu95@gmail.com>
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+
+Fixes:
 Signed-off-by:
 Acked-by:
 Cc:
@@ -6,7 +16,6 @@ Reported-by:
 Tested-by:
 Reviewed-by:
 Suggested-by:
-Fixes:
 
 Howard Chu <howardchu95@gmail.com>
 Arnaldo Carvalho de Melo <acme@kernel.org>

@@ -24,3 +24,28 @@ if [ ! -f /sys/kernel/btf/vmlinux ]
 Should there be some type of string mismatch printing the actual output and the
 desired output/format? 
 check_string(string, format)
+
+[]
+trace_test_string() {
+  echo "Testing perf trace's string augmentation"
+  output="trace_output"
+  ./perf trace -e renameat* --max-events=1 -- mv ${file1} ${file2} > $output
+  if ! cat $output | grep -q -E "^mv/[0-9]+ renameat(2)?\(.*, \"${file1}\", .*, \"${file2}\", .*\) += +[0-9]+$"
+  then
+    echo "String augmentation test failed"
+    err=1
+  fi
+}
+
+test child forked, pid 18289
+Checking if vmlinux BTF exists
+Testing perf trace's string augmentation
+:18326/18326 renameat2(CWD, "/tmp/file1_8yca", CWD, "/tmp/file2_8yca", NOREPLACE) = 0
+
+there is an extra 'mv'
+
+[]
+comment
+		 * The reason is that we call machine__findnew_thread within
+		 * thread__init_maps to find the thread leader and that would
+		 * screwed the rb tree.
