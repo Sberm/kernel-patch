@@ -1,0 +1,67 @@
+diff --git a/tools/perf/builtin-trace.c b/tools/perf/builtin-trace.c
+index 6ac51925ea42..530c0da49be1 100644
+--- a/tools/perf/builtin-trace.c
++++ b/tools/perf/builtin-trace.c
+@@ -1919,6 +1919,8 @@ static size_t trace__fprintf_comm_tid(struct trace *trace, struct thread *thread
+ 	if (trace->multiple_threads) {
+ 		if (trace->show_comm)
+ 			printed += fprintf(fp, "%.14s/", thread__comm_str(thread));
++		if (thread__comm_str(thread)[0] == ':')
++			printf("[FAILED], parsed %s\n", thread__comm_str(thread));
+ 		printed += fprintf(fp, "%d ", thread__tid(thread));
+ 	}
+ 
+@@ -4366,6 +4368,10 @@ static int trace__expand_filters(struct trace *trace, struct evsel **err_evsel)
+ 	return 0;
+ }
+ 
++static int trace_nr_events_cmp(void *priv __maybe_unused,
++			       const struct list_head *la,
++			       const struct list_head *lb);
++
+ static int trace__run(struct trace *trace, int argc, const char **argv)
+ {
+ 	struct evlist *evlist = trace->evlist;
+@@ -4462,6 +4468,17 @@ static int trace__run(struct trace *trace, int argc, const char **argv)
+ 			goto out_delete_evlist;
+ 		}
+ 		workload_pid = evlist->workload.pid;
++		printf("workload_pid is %d\n", workload_pid);
++		{
++			const char *str = "/proc/%d/comm";
++			char buf[128];
++			int fd;
++			sprintf(buf, str, workload_pid);
++			fd = open(buf, O_RDONLY);
++			buf[sizeof(buf) - 1] = 0;
++			if (read(fd, buf, sizeof(buf)))
++				printf("comm read from procfs %s\n", buf);
++		}
+ 	}
+ 
+ 	err = evlist__open(evlist);
+@@ -4554,6 +4571,8 @@ static int trace__run(struct trace *trace, int argc, const char **argv)
+ 		perf_thread_map__nr(evlist->core.threads) > 1 ||
+ 		evlist__first(evlist)->core.attr.inherit;
+ 
++
++
+ 	/*
+ 	 * Now that we already used evsel->core.attr to ask the kernel to setup the
+ 	 * events, lets reuse evsel->core.attr.sample_max_stack as the limit in
+diff --git a/tools/perf/util/thread.c b/tools/perf/util/thread.c
+index 89585f53c1d5..3aa42dc95636 100644
+--- a/tools/perf/util/thread.c
++++ b/tools/perf/util/thread.c
+@@ -288,8 +288,10 @@ static const char *__thread__comm_str(struct thread *thread)
+ {
+ 	const struct comm *comm = thread__comm(thread);
+ 
+-	if (!comm)
++	if (!comm) {
++		printf("thread NULL FAILED\n");
+ 		return NULL;
++	}
+ 
+ 	return comm__str(comm);
+ }
