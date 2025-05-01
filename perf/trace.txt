@@ -1,0 +1,31 @@
+trace__fprintf_entry_head
+  trace__fprintf_comm_tid
+    thread__comm_str (:11451)
+
+[]
+prerequisite: 
+file '1' does not exist
+
+if it traces everything
+
+perf $ sudo ./perf trace mv 1 2 2>&1 | grep renameat
+     0.356 (         ): mv/69565 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) ...
+
+there will be one renameat2 record
+
+But tracing renameat* event, it does not print anything.
+perf $ sudo ./perf trace -e renameat* mv 1 2 2>&1
+mv: cannot stat '1': No such file or directory
+
+But this is good
+
+perf $ touch 1 && sudo ./perf trace -e renameat* mv 1 2 2>&1 | grep renameat
+     0.000 (         ): mv/70551 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) ...
+
+Using syscalls:... it worked, because it is a tracepoint
+
+perf $ sudo ./perf trace -e syscalls:sys_enter_renameat2 mv 1 2 2>&1
+mv: cannot stat '1': No such file or directory
+     0.000 :71665/[FAILED], parsed :71665
+71665 syscalls:sys_enter_renameat2(olddfd: CWD, oldname: "", newdfd: CWD, newname: "", flags: NOREPLACE)
+

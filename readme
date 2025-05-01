@@ -1,1 +1,3 @@
 ## Kernel patch
+
+`template` can be useful, `command` is the command used for sending emails, and `patches` includes all the patches I've sent

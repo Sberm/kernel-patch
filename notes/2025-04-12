@@ -1,0 +1,149 @@
+debug skip
+comm :206312
+comm mv
+
+debug skip
+comm :206319
+comm mv
+
+debug skip
+comm :206349
+debug skip
+comm mv
+     0.467 ( 0.002 ms): :206349/206349 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.480 ( 0.026 ms): :206349/206349 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+
+debug findnew
+comm :209306
+debug findnew
+comm mv
+
+debug findnew
+comm :209313
+debug findnew
+debug findnew
+comm mv
+     0.472 ( 0.002 ms): :209313/209313 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.485 ( 0.027 ms): :209313/209313 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+
+debug findnew
+comm :215304
+debug findnew
+comm mv
+debug findnew
+comm :215311
+debug findnew
+debug result found, returning
+debug findnew
+comm mv
+     0.483 ( 0.002 ms): :215311/215311 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.496 ( 0.028 ms): :215311/215311 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+debug findnew :217877
+comm :217877
+debug findnew :217877
+debug result :217877 found, returning
+debug findnew mv
+comm mv
+     0.471 ( 0.002 ms): :217877/217877 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.483 ( 0.022 ms): :217877/217877 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+debug findnew :217884
+comm :217884
+debug findnew mv
+comm mv
+
+
+debug new
+debug findnew :225230
+comm :225230
+debug override
+debug findnew mv
+comm mv
+debug new
+debug findnew :225237
+comm :225237
+debug new
+debug findnew :225237
+debug result :225237 found, returning
+debug override
+debug findnew mv
+comm mv
+     0.467 ( 0.002 ms): :225237/225237 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.479 ( 0.028 ms): :225237/225237 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+debug new
+debug findnew :228579
+comm :228579
+debug ____thread__set_comm
+debug override
+debug findnew mv
+comm mv
+
+
+debug new
+debug findnew :228386
+comm :228386
+debug new
+debug findnew :228386
+debug result :228386 found, returning
+debug ____thread__set_comm
+debug override
+debug findnew mv
+comm mv
+     0.451 ( 0.002 ms): :228386/228386 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.464 ( 0.028 ms): :228386/228386 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+
+debug thread new
+debug new
+debug findnew :231591
+comm :231591
+debug set comm
+debug override
+debug findnew mv
+comm mv
+debug thread new
+debug new
+debug findnew :231598
+comm :231598
+debug thread new
+debug new
+debug findnew :231598
+debug result :231598 found, returning
+debug set comm
+debug override
+debug findnew mv
+comm mv
+     0.484 ( 0.002 ms): :231598/231598 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.497 ( 0.026 ms): :231598/231598 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+debug machine findnew
+debug new
+debug findnew :237667
+comm :237667
+debug set comm
+debug override
+debug findnew mv
+comm mv
+debug machine findnew
+debug new
+debug findnew :237674
+comm :237674
+debug machine findnew
+debug new
+debug findnew :237674
+debug result :237674 found, returning
+debug set comm
+debug override
+debug findnew mv
+comm mv
+     0.468 ( 0.002 ms): :237674/237674 renameat2(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2", flags: NOREPLACE) = -1 EEXIST (File exists)
+     0.480 ( 0.024 ms): :237674/237674 renameat(olddfd: CWD, oldname: "1", newdfd: CWD, newname: "2")        = 0
+
+__machine__findnew_thread is run twice, why?
+
+perf $ for i in {1..25}; do touch 1 && sudo ./perf trace -e renameat* mv 1 2 2>tmp2 1>tmp2 && cat tmp2 | grep -E "workload_pid|renameat|FAILED|comm|debug" --color=auto; done
+
+this will make samples who runs machine findnew twice, with a :11451 as comm, not emitting a trace record

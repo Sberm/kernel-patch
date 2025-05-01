@@ -1,0 +1,174 @@
+From 4c8aa7c29b9793026635a61cd72c7fc5ef6da56d Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Fri, 8 Nov 2024 12:41:28 -0800
+Subject: [PATCH v16 09/10] perf record --off-cpu: Add --off-cpu-thresh option
+
+Specify the threshold for dumping offcpu samples with --off-cpu-thresh,
+the unit is milliseconds. Default value is 500ms.
+
+Example:
+
+  perf record --off-cpu --off-cpu-thresh 824
+
+The example above collects direct off-cpu samples where the off-cpu time
+is longer than 824ms
+
+Tested-by: Gautam Menghani <gautam@linux.ibm.com>
+Acked-by: Namhyung Kim <namhyung@kernel.org>
+Suggested-by: Ian Rogers <irogers@google.com>
+Suggested-by: Namhyung Kim <namhyung@kernel.org>
+Suggested-by: Arnaldo Carvalho de Melo <acme@redhat.com>
+Reviewed-by: Ian Rogers <irogers@google.com>
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: James Clark <james.clark@linaro.org>
+Cc: Jiri Olsa <jolsa@kernel.org>
+Cc: Kan Liang <kan.liang@linux.intel.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Namhyung Kim <namhyung@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Link: https://lore.kernel.org/r/20241108204137.2444151-2-howardchu95@gmail.com
+Signed-off-by: Arnaldo Carvalho de Melo <acme@redhat.com>
+---
+ tools/perf/Documentation/perf-record.txt |  9 ++++++++
+ tools/perf/builtin-record.c              | 26 ++++++++++++++++++++++++
+ tools/perf/util/bpf_off_cpu.c            |  3 +++
+ tools/perf/util/bpf_skel/off_cpu.bpf.c   |  2 +-
+ tools/perf/util/off_cpu.h                |  1 +
+ tools/perf/util/record.h                 |  1 +
+ 6 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/tools/perf/Documentation/perf-record.txt b/tools/perf/Documentation/perf-record.txt
+index c7fc1ba265e2..d84f7a0af05b 100644
+--- a/tools/perf/Documentation/perf-record.txt
++++ b/tools/perf/Documentation/perf-record.txt
+@@ -837,6 +837,15 @@ filtered through the mask provided by -C option.
+ 	only, as of now.  So the applications built without the frame
+ 	pointer might see bogus addresses.
+ 
++	off-cpu profiling consists two types of samples: direct samples, which
++	share the same behavior as regular samples, and the accumulated
++	samples, stored in BPF stack trace map, presented after all the regular
++	samples.
++
++--off-cpu-thresh::
++	Once a task's off-cpu time reaches this threshold (in milliseconds), it
++	generates a direct off-cpu sample. The default is 500ms.
++
+ --setup-filter=<action>::
+ 	Prepare BPF filter to be used by regular users.  The action should be
+ 	either "pin" or "unpin".  The filter can be used after it's pinned.
+diff --git a/tools/perf/builtin-record.c b/tools/perf/builtin-record.c
+index da28c52af464..d3ddf933d7a5 100644
+--- a/tools/perf/builtin-record.c
++++ b/tools/perf/builtin-record.c
+@@ -3162,6 +3162,28 @@ static int record__parse_mmap_pages(const struct option *opt,
+ 	return ret;
+ }
+ 
++static int record__parse_off_cpu_thresh(const struct option *opt,
++					const char *str,
++					int unset __maybe_unused)
++{
++	struct record_opts *opts = opt->value;
++	char *endptr;
++	u64 off_cpu_thresh_ms;
++
++	if (!str)
++		return -EINVAL;
++
++	off_cpu_thresh_ms = strtoull(str, &endptr, 10);
++
++	/* the threshold isn't string "0", yet strtoull() returns 0, parsing failed */
++	if (*endptr || (off_cpu_thresh_ms == 0 && strcmp(str, "0")))
++		return -EINVAL;
++	else
++		opts->off_cpu_thresh_ns = off_cpu_thresh_ms * NSEC_PER_MSEC;
++
++	return 0;
++}
++
+ void __weak arch__add_leaf_frame_record_opts(struct record_opts *opts __maybe_unused)
+ {
+ }
+@@ -3355,6 +3377,7 @@ static struct record record = {
+ 		.ctl_fd              = -1,
+ 		.ctl_fd_ack          = -1,
+ 		.synth               = PERF_SYNTH_ALL,
++		.off_cpu_thresh_ns   = OFFCPU_THRESH,
+ 	},
+ };
+ 
+@@ -3580,6 +3603,9 @@ static struct option __record_options[] = {
+ 	OPT_BOOLEAN(0, "off-cpu", &record.off_cpu, "Enable off-cpu analysis"),
+ 	OPT_STRING(0, "setup-filter", &record.filter_action, "pin|unpin",
+ 		   "BPF filter action"),
++	OPT_CALLBACK(0, "off-cpu-thresh", &record.opts, "ms",
++		     "Dump off-cpu samples if off-cpu time exceeds this threshold (in milliseconds). (Default: 500ms)",
++		     record__parse_off_cpu_thresh),
+ 	OPT_END()
+ };
+ 
+diff --git a/tools/perf/util/bpf_off_cpu.c b/tools/perf/util/bpf_off_cpu.c
+index c7fde66bb8f9..c367fefe6ecb 100644
+--- a/tools/perf/util/bpf_off_cpu.c
++++ b/tools/perf/util/bpf_off_cpu.c
+@@ -14,6 +14,7 @@
+ #include "util/strlist.h"
+ #include <bpf/bpf.h>
+ #include <internal/xyarray.h>
++#include <linux/time64.h>
+ 
+ #include "bpf_skel/off_cpu.skel.h"
+ 
+@@ -292,6 +293,8 @@ int off_cpu_prepare(struct evlist *evlist, struct target *target,
+ 		}
+ 	}
+ 
++	skel->bss->offcpu_thresh_ns = opts->off_cpu_thresh_ns;
++
+ 	err = off_cpu_bpf__attach(skel);
+ 	if (err) {
+ 		pr_err("Failed to attach off-cpu BPF skeleton\n");
+diff --git a/tools/perf/util/bpf_skel/off_cpu.bpf.c b/tools/perf/util/bpf_skel/off_cpu.bpf.c
+index 14cd8881f8bb..72763bb8d1de 100644
+--- a/tools/perf/util/bpf_skel/off_cpu.bpf.c
++++ b/tools/perf/util/bpf_skel/off_cpu.bpf.c
+@@ -124,7 +124,7 @@ const volatile bool uses_cgroup_v1 = false;
+ 
+ int perf_subsys_id = -1;
+ 
+-__u64 offcpu_thresh_ns = 500000000ull;
++__u64 offcpu_thresh_ns;
+ 
+ /*
+  * Old kernel used to call it task_struct->state and now it's '__state'.
+diff --git a/tools/perf/util/off_cpu.h b/tools/perf/util/off_cpu.h
+index 2a4b7f9b2c4c..64bf763ddf50 100644
+--- a/tools/perf/util/off_cpu.h
++++ b/tools/perf/util/off_cpu.h
+@@ -16,6 +16,7 @@ struct record_opts;
+ 			      PERF_SAMPLE_PERIOD | PERF_SAMPLE_RAW | \
+ 			      PERF_SAMPLE_CGROUP)
+ 
++#define OFFCPU_THRESH 500000000ULL
+ 
+ #ifdef HAVE_BPF_SKEL
+ int off_cpu_prepare(struct evlist *evlist, struct target *target,
+diff --git a/tools/perf/util/record.h b/tools/perf/util/record.h
+index a6566134e09e..c82db4833b0a 100644
+--- a/tools/perf/util/record.h
++++ b/tools/perf/util/record.h
+@@ -79,6 +79,7 @@ struct record_opts {
+ 	int	      synth;
+ 	int	      threads_spec;
+ 	const char    *threads_user_spec;
++	u64	      off_cpu_thresh_ns;
+ };
+ 
+ extern const char * const *record_usage;
+-- 
+2.45.2
+
