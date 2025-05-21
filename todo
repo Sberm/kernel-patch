@@ -49,3 +49,29 @@ comment
 		 * The reason is that we call machine__findnew_thread within
 		 * thread__init_maps to find the thread leader and that would
 		 * screwed the rb tree.
+
+[]
+delete one of the two functions
+static inline int augmented__output(void *ctx, struct augmented_args_payload *args, int len)
+{
+	/* If perf_event_output fails, return non-zero so that it gets recorded unaugmented */
+	return bpf_perf_event_output(ctx, &__augmented_syscalls__, BPF_F_CURRENT_CPU, args, len);
+}
+
+static inline int augmented__beauty_output(void *ctx, void *data, int len)
+{
+	return bpf_perf_event_output(ctx, &__augmented_syscalls__, BPF_F_CURRENT_CPU, data, len);
+}
+
+[]
+remove temporary files for trace record replay test
+
+perf trace record -o ${file} sleep 1 || exit 1
+if ! perf trace -i ${file} 2>&1 | grep nanosleep; then
+	echo "Failed: cannot find *nanosleep syscall"
++	rm -rf ${file}
+	exit 1
+fi
+
+[]
+fix task filtering

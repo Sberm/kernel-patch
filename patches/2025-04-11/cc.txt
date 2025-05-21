@@ -1,0 +1,22 @@
+git send-email --smtp-debug=1 --to peterz@infradead.org \
+--cc mingo@redhat.com \
+--cc acme@kernel.org \
+--cc namhyung@kernel.org \
+--cc mark.rutland@arm.com \
+--cc alexander.shishkin@linux.intel.com \
+--cc jolsa@kernel.org \
+--cc irogers@google.com \
+--cc adrian.hunter@intel.com \
+--cc kan.liang@linux.intel.com \
+--cc james.clark@linaro.org \
+--cc howardchu95@gmail.com \
+--cc charlie@rivosinc.com \
+--cc mpetlan@redhat.com \
+--cc vmolnaro@redhat.com \
+--cc linux@treblig.org \
+--cc mhiramat@kernel.org \
+--cc leo.yan@arm.com \
+--cc dima@secretsauce.net \
+--cc linux-perf-users@vger.kernel.org \
+--cc linux-kernel@vger.kernel.org \
+--cc krzysztof.m.lopatowski@gmail.com

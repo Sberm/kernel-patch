@@ -1,0 +1,31 @@
+From 4289032101d2c41809fb6738b05038d2e0e753c9 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Fri, 4 Apr 2025 18:29:49 -0700
+Subject: [PATCH] perf test: Remove the temporary trace record file when the
+ test fails
+
+Even if there's no nanosleep in the trace record file, it doesn't mean
+the file itself doesn't exist. Remove the temporary file since the test
+frequently fails on my machine and leaves behind many uncleaned
+temporary files.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+---
+ tools/perf/tests/shell/trace_record_replay.sh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tools/perf/tests/shell/trace_record_replay.sh b/tools/perf/tests/shell/trace_record_replay.sh
+index 6b4ed863c1ef..555537dc6cfa 100755
+--- a/tools/perf/tests/shell/trace_record_replay.sh
++++ b/tools/perf/tests/shell/trace_record_replay.sh
+@@ -15,6 +15,7 @@ file=$(mktemp /tmp/temporary_file.XXXXX)
+ perf trace record -o ${file} sleep 1 || exit 1
+ if ! perf trace -i ${file} 2>&1 | grep nanosleep; then
+ 	echo "Failed: cannot find *nanosleep syscall"
++	rm -f ${file}
+ 	exit 1
+ fi
+ 
+-- 
+2.45.2
+
