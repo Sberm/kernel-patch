@@ -101,3 +101,8 @@ struct thread_trace {
 	struct hashmap *syscall_stats;
 };
 
+[]
+rewrite the BPF code to pass the verifier
+
+[]
+memory leak in perf trace

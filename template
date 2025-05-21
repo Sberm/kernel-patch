@@ -30,6 +30,99 @@ Ian Rogers <irogers@google.com>
 Adrian Hunter <adrian.hunter@intel.com>
 "Liang, Kan" <kan.liang@linux.intel.com>
 
+
+Changelog in a cover letter
+===
+From: Ian Rogers @ 2025-05-12 19:46 UTC (permalink / raw)
+  To: Arnaldo Carvalho de Melo, Peter Zijlstra, Ingo Molnar,
+	Namhyung Kim, Mark Rutland, Alexander Shishkin, Jiri Olsa,
+	Ian Rogers, Adrian Hunter, Kan Liang, James Clark, Xu Yang,
+	Thomas Richter, Ravi Bangoria, linux-perf-users, linux-kernel
+
+The "PMU JSON event tests" have been running slowly, these changes
+target improving them with an improvement of the test running 8 to 10
+times faster.
+
+The first patch changes from searching through all aliases by name in
+a list to using a hashmap. Doing a fast hashmap__find means testing
+for having an event needn't load from disk if an event is already
+present.
+
+The second patch switch the fncache to use a hashmap rather than its
+own hashmap with a limited number of buckets. When there are many
+filename queries, such as with a test, there are many collisions with
+the previous fncache approach leading to linear searching of the
+entries.
+
+The final patch adds a find function for metrics. Normally metrics can
+match by name and group, however, only name matching happens when one
+metric refers to another. As we test every "id" in a metric to see if
+it is a metric, the find function can dominate performance as it
+linearly searches all metrics. Add a find function for the metrics
+table so that a metric can be found by name with a binary search.
+
+Before these changes:
+```
+$ time perf test -v 10
+ 10: PMU JSON event tests                                            :
+ 10.1: PMU event table sanity                                        : Ok
+ 10.2: PMU event map aliases                                         : Ok
+ 10.3: Parsing of PMU event table metrics                            : Ok
+ 10.4: Parsing of PMU event table metrics with fake PMUs             : Ok
+ 10.5: Parsing of metric thresholds with fake PMUs                   : Ok
+
+real    0m18.499s
+user    0m18.150s
+sys     0m3.273s
+```
+
+After these changes:
+```
+$ time perf test -v 10
+ 10: PMU JSON event tests                                            :
+ 10.1: PMU event table sanity                                        : Ok
+ 10.2: PMU event map aliases                                         : Ok
+ 10.3: Parsing of PMU event table metrics                            : Ok
+ 10.4: Parsing of PMU event table metrics with fake PMUs             : Ok
+ 10.5: Parsing of metric thresholds with fake PMUs                   : Ok
+
+real    0m2.338s
+user    0m1.797s
+sys     0m2.186s
+```
+
+v2: Rebase on tmp.perf-tools-next.
+
+Ian Rogers (3):
+  perf fncache: Switch to using hashmap
+  perf pmu: Change aliases from list to hashmap
+  perf metricgroup: Binary search when resolving referred to metrics
+
+ tools/perf/builtin-stat.c                |   6 +-
+ tools/perf/pmu-events/empty-pmu-events.c |  66 ++++++++-
+ tools/perf/pmu-events/jevents.py         |  66 ++++++++-
+ tools/perf/pmu-events/pmu-events.h       |  23 +++-
+ tools/perf/tests/pmu-events.c            | 129 +++++++++--------
+ tools/perf/util/fncache.c                |  69 +++++-----
+ tools/perf/util/fncache.h                |   1 -
+ tools/perf/util/hwmon_pmu.c              |  43 +++---
+ tools/perf/util/metricgroup.c            | 102 ++++++--------
+ tools/perf/util/metricgroup.h            |   2 +-
+ tools/perf/util/pmu.c                    | 167 +++++++++++++++--------
+ tools/perf/util/pmu.h                    |   4 +-
+ tools/perf/util/srccode.c                |   4 +-
+ tools/perf/util/tool_pmu.c               |  17 +--
+ 14 files changed, 430 insertions(+), 269 deletions(-)
+
+-- 
+2.49.0.1045.g170613ef41-goog
+
+
+
+
+This is the changelog in an actual patch
+===
+
 To: acme@kernel.org
 Cc: namhyung@kernel.org, peterz@infradead.org, mingo@redhat.com,
       acme@kernel.org,  jolsa@kernel.org, irogers@google.com,

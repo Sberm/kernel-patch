@@ -1,0 +1,30 @@
+From d4293524d44cbfa9604b4b2b75c8db4ddc79a2e0 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Fri, 16 May 2025 15:22:19 -0700
+Subject: [PATCH v2 1/5] perf test trace: Use shell's -f flag to check if
+ vmlinux exists
+
+To match the style of the existing codebase, no functional changes
+were applied.
+
+Signed-off-by: Howard Chu <howardchu95@gmail.com>
+---
+ tools/perf/tests/shell/trace_btf_enum.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/perf/tests/shell/trace_btf_enum.sh b/tools/perf/tests/shell/trace_btf_enum.sh
+index f0b49f7fb57d..b3775209a0b1 100755
+--- a/tools/perf/tests/shell/trace_btf_enum.sh
++++ b/tools/perf/tests/shell/trace_btf_enum.sh
+@@ -17,7 +17,7 @@ skip_if_no_perf_trace || exit 2
+ 
+ check_vmlinux() {
+   echo "Checking if vmlinux exists"
+-  if ! ls /sys/kernel/btf/vmlinux 1>/dev/null 2>&1
++  if [ ! -f /sys/kernel/btf/vmlinux ]
+   then
+     echo "trace+enum test [Skipped missing vmlinux BTF support]"
+     err=2
+-- 
+2.45.2
+

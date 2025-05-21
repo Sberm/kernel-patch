@@ -1,0 +1,61 @@
+From ba059ef1a4423b0e4de8f49ca614bfc099313f73 Mon Sep 17 00:00:00 2001
+From: Howard Chu <howardchu95@gmail.com>
+Date: Sat, 17 May 2025 09:20:29 -0700
+Subject: [PATCH v1 0/5] perf test trace: Reduce test failures and make error messages verbose
+
+Currently, BTF tests fail constantly, this series fixes two major reasons
+why they fail, and makes the error messages acquired when using '-vv'
+more verbose, so when they fail, one can easily diagnose the problem.
+
+Before:
+    $ sudo /tmp/perf test enum -vv
+    107: perf trace enum augmentation tests:
+    107: perf trace enum augmentation tests                              : Running
+    --- start ---
+    test child forked, pid 783533
+    Checking if vmlinux exists
+    Tracing syscall landlock_add_rule
+    Tracing non-syscall tracepoint syscall
+    ---- end(-1) ----
+    107: perf trace enum augmentation tests                              : FAILED!
+
+After:
+    $ sudo /tmp/perf test enum -vv
+    107: perf trace enum augmentation tests:
+    107: perf trace enum augmentation tests                              : Running
+    --- start ---
+    test child forked, pid 851658
+    Checking if vmlinux exists
+    Tracing syscall landlock_add_rule
+    Tracing non-syscall tracepoint timer:hrtimer_setup,timer:hrtimer_start
+    [tracepoint failure] Failed to trace tracepoint timer:hrtimer_setup,timer:hrtimer_start, output:
+    event syntax error: 'timer:hrtimer_setup,timer:hrtimer_start'
+			 \___ unknown tracepoint
+
+    Error:  File /sys/kernel/tracing//events/timer/hrtimer_setup not found.
+    Hint:   Perhaps this kernel misses some CONFIG_ setting to enable this feature?.
+
+    Run 'perf list' for a list of valid events
+
+     Usage: perf trace [<options>] [<command>]
+	or: perf trace [<options>] -- <command> [<options>]
+	or: perf trace record [<options>] [<command>]
+	or: perf trace record [<options>] -- <command> [<options>]
+
+	-e, --event <event>   event/syscall selector. use 'perf list' to list available events---- end(-1) ----
+    107: perf trace enum augmentation tests                              : FAILED!
+
+Howard Chu (5):
+  perf test trace: Use shell's -f flag to check if vmlinux exists
+  perf test trace: Remove set -e and print trace test's error messages
+  perf test trace: Stop tracing hrtimer_init event in trace enum test
+  perf test trace: Remove set -e for BTF general tests
+  perf test trace BTF: Use --sort-events in BTF general tests
+
+ tools/perf/tests/shell/trace_btf_enum.sh    | 17 +++++++++--------
+ tools/perf/tests/shell/trace_btf_general.sh | 19 +++++++++----------
+ 2 files changed, 18 insertions(+), 18 deletions(-)
+
+-- 
+2.45.2
+

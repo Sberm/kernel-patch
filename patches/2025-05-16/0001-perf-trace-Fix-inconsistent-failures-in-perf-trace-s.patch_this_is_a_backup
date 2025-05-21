@@ -1,8 +1,7 @@
-From 6dc2b84ec082232551913faa17a07ae9c886396b Mon Sep 17 00:00:00 2001
+From 6815b673d48e47f9220f4681deb2a0bdd4fe0507 Mon Sep 17 00:00:00 2001
 From: Howard Chu <howardchu95@gmail.com>
 Date: Thu, 3 Apr 2025 20:48:46 -0700
-Subject: [PATCH v1] perf trace: Fix inconsistent failures in perf trace's
- tests
+Subject: [PATCH] perf trace: Fix inconsistent failures in perf trace's tests
 
 There are two failures that frequently occur in perf trace's tests. One
 is the failure of 'perf trace BTF general tests'; The other one is the
@@ -26,7 +25,6 @@ test can restore the original config. Mark the BTF general tests as
 exclusive will solve the failure.
 
 Signed-off-by: Howard Chu <howardchu95@gmail.com>
-Fixes: 0255338d6975 ("perf trace: Add tests for BTF general augmentation")
 ---
  tools/perf/tests/shell/trace_btf_general.sh | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
