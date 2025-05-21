@@ -75,3 +75,29 @@ fi
 
 []
 fix task filtering
+
+[]
+the second 'struct' keyword has spaces instead of tabs
+struct thread_trace {
+	u64		  entry_time;
+	bool		  entry_pending;
+	unsigned long	  nr_events;
+	unsigned long	  pfmaj, pfmin;
+	char		  *entry_str;
+	double		  runtime_ms;
+	size_t		  (*ret_scnprintf)(char *bf, size_t size, struct syscall_arg *arg);
+        struct {
+		unsigned long ptr;
+		short int     entry_str_pos;
+		bool	      pending_open;
+		unsigned int  namelen;
+		char	      *name;
+	} filename;
+	struct {
+		int	      max;
+		struct file   *table;
+	} files;
+
+	struct hashmap *syscall_stats;
+};
+
