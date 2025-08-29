@@ -1,0 +1,36 @@
+== opinion ==
+
+hitting enter in searching activates an event
+if not run in root, then it won't open the event
+
+execution procedures:
+sudo -s
+source /home/howard/venv/bin/activate
+pip install textual
+PYTHONPATH=/tmp/perf/python python/ilist.py
+
+If it could expand to the full height in the left window when not collecting events, it'd be better
+
+Is there a way to pause the event collection?
+
+sparkline's height can be bigger
+
+If this is an interactive command that collects the count of events why not name it istat? ilist sounds like merely reading the menu without ordering
+
+> [11] As some PMUs have hundreds of events a 'c'
+key will collapse the events in the current PMU to make navigating the
+PMUs easier.
+that's why it should show the whole thing at first, or there should be an exit mode where I
+can scroll through the list of events, small height makes me forget the parent-child relation
+
+Some people are using terminal in vscode, and caret-q is occupied, I'd image for emacs users this is entering raw character, so it doesn't work in eterm either, why not just q?
+
+== review ==
+
+don't think this is needed: (04)
++		if (ret)
++			break;
+
+
+Name of the PMU including suffixes
+should be ("General information about the pmu")
